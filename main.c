@@ -55,10 +55,12 @@ int main(void)
 {
     /* NOTE: DO NOT MODIFY THIS BLOCK */
 #define CPU_SPEED_MHZ (DEFAULT_SYS_CLK_KHZ / 1000)
-    if(CPU_SPEED_MHZ > 266 && CPU_SPEED_MHZ <= 396)
+    if(CPU_SPEED_MHZ > 266 && CPU_SPEED_MHZ <= 360)
         vreg_set_voltage(VREG_VOLTAGE_1_20);
-    else if (CPU_SPEED_MHZ > 396)
+    else if (CPU_SPEED_MHZ > 360 && CPU_SPEED_MHZ <= 396)
         vreg_set_voltage(VREG_VOLTAGE_1_25);
+    else if (CPU_SPEED_MHZ > 396)
+        vreg_set_voltage(VREG_VOLTAGE_MAX);
     else
         vreg_set_voltage(VREG_VOLTAGE_DEFAULT);
 
