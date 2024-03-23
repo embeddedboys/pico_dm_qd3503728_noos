@@ -37,7 +37,7 @@ if(OVERCLOCK_ENABLED)
     #  1  | 266MHz  |  133MHz   |  1.10(V) (default, stable, recommended for most devices)
     #  2  | 240MHz  |  120MHZ   |  1.10(V) (more stable)
     #  3  | 360MHz  |  90MHz    |  1.20(V)
-    #  4  | 400MHz  |  100MHz   |  1.25(V)
+    #  4  | 400MHz  |  100MHz   |  1.30(V)
     #  5  | 420MHz  |  105MHz   |  1.30(V)
     set(OVERCLOCK_PROFILE 1)
 
