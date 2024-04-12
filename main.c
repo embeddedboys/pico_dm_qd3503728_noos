@@ -49,7 +49,7 @@ bool lv_tick_timer_callback(struct repeating_timer *t)
     return true;
 }
 
-extern int factory_test(void);
+// extern int factory_test(void);
 
 int main(void)
 {
@@ -80,12 +80,12 @@ int main(void)
     lv_port_indev_init();
 
     printf("Starting demo\n");
-    // lv_demo_widgets();
+    lv_demo_widgets();
     // lv_demo_stress();
     // lv_demo_music();
 
     /* measure weighted fps and opa speed */
-    lv_demo_benchmark();
+    // lv_demo_benchmark();
 
     /* This is a factory test app */
     // factory_test();

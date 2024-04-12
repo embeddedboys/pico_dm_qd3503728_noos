@@ -100,7 +100,7 @@ target_compile_definitions(pio_i80 PUBLIC LCD_PIN_CS=${LCD_PIN_CS})
 target_compile_definitions(pio_i80 PUBLIC DEFAULT_PIO_CLK_KHZ=${PERI_CLK_KHZ})
 
 # include factory test library here
-add_subdirectory(factory)
+# add_subdirectory(factory)
 
 # lv_conf.h need pico header files e.g. the custom tick
 target_link_libraries(lvgl PRIVATE pico_stdlib)
@@ -121,7 +121,8 @@ add_executable(${PROJECT_NAME} ${COMMON_SOURCES})
 target_link_libraries(${PROJECT_NAME}
         pico_bootsel_via_double_reset
         pico_stdlib hardware_pwm
-        hardware_i2c pio_i80 factory_test
+        hardware_i2c pio_i80
+        # factory_test
         lvgl lvgl::demos lvgl::examples
 )
 target_include_directories(${PROJECT_NAME} PUBLIC .)
