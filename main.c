@@ -43,10 +43,15 @@
 
 #include "backlight.h"
 
-bool lv_tick_timer_callback(struct repeating_timer *t)
+// bool lv_tick_timer_callback(struct repeating_timer *t)
+// {
+//     lv_timer_handler();
+//     return true;
+// }
+
+static uint32_t my_tick_get_cb(void)
 {
-    lv_timer_handler();
-    return true;
+    return time_us_32() / 1000;
 }
 
 // extern int factory_test(void);
@@ -79,29 +84,32 @@ int main(void)
     lv_port_disp_init();
     lv_port_indev_init();
 
+    /* lvgl v9 no longer use CUSTOM_TICK macro anymore */
+    lv_tick_set_cb(my_tick_get_cb);
+
     printf("Starting demo\n");
-    lv_demo_widgets();
+    // lv_demo_widgets();
     // lv_demo_stress();
     // lv_demo_music();
 
     /* measure weighted fps and opa speed */
-    // lv_demo_benchmark();
+    // Before : 348 94 45
+    // After  : 369 101 72
+    lv_demo_benchmark();
 
     /* This is a factory test app */
     // factory_test();
 
-    struct repeating_timer timer;
-    add_repeating_timer_ms(1, lv_tick_timer_callback, NULL, &timer);
+    // struct repeating_timer timer;
+    // add_repeating_timer_ms(1, lv_tick_timer_callback, NULL, &timer);
 
     sleep_ms(10);
     backlight_driver_init();
     backlight_set_level(100);
     printf("backlight set to 100%%\n");
 
-    printf("going to loop, %lld\n", time_us_64());
     for (;;) {
-        tight_loop_contents();
-        sleep_ms(200);
+        lv_timer_periodic_handler();
     }
 
     return 0;
