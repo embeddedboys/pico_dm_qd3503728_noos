@@ -91,10 +91,16 @@ int main(void)
     // lv_demo_widgets();
     // lv_demo_stress();
     // lv_demo_music();
+    // lv_demo_keypad_encoder();
+    // lv_demo_render(LV_DEMO_RENDER_SCENE_TRIANGLE, 255);
+    // lv_demo_flex_layout();
+    // lv_demo_multilang();
+    // lv_demo_scroll();
 
     /* measure weighted fps and opa speed */
+    // At 400MHz CPU / 100 MHz Flash
     // Before : 348 94 45
-    // After  : 369 101 72
+    // After  : 386 127 157
     lv_demo_benchmark();
 
     /* This is a factory test app */
