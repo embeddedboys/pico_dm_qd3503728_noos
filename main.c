@@ -43,11 +43,11 @@
 
 #include "backlight.h"
 
-bool lv_tick_timer_callback(struct repeating_timer *t)
-{
-    lv_timer_handler();
-    return true;
-}
+// bool lv_tick_timer_callback(struct repeating_timer *t)
+// {
+//     lv_timer_handler();
+//     return true;
+// }
 
 // extern int factory_test(void);
 
@@ -85,23 +85,26 @@ int main(void)
     // lv_demo_music();
 
     /* measure weighted fps and opa speed */
+    // Before : Avg.146 256 114 186
+    // After  : Avg.153 265 117 192
     // lv_demo_benchmark();
 
     /* This is a factory test app */
     // factory_test();
 
-    struct repeating_timer timer;
-    add_repeating_timer_ms(1, lv_tick_timer_callback, NULL, &timer);
+    // struct repeating_timer timer;
+    // add_repeating_timer_ms(1, lv_tick_timer_callback, NULL, &timer);
 
     sleep_ms(10);
     backlight_driver_init();
     backlight_set_level(100);
     printf("backlight set to 100%%\n");
 
-    printf("going to loop, %lld\n", time_us_64());
+    printf("going to loop, %lld\n", time_us_64() / 1000);
     for (;;) {
-        tight_loop_contents();
-        sleep_ms(200);
+        // tight_loop_contents();
+        // sleep_ms(200);
+        lv_timer_handler_run_in_period(1);
     }
 
     return 0;
