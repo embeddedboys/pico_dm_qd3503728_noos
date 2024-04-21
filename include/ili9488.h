@@ -24,10 +24,13 @@
 
 #include <stdint.h>
 
+#include "lvgl/lvgl.h"
+
 #define ILI9488_X_RES 480
 #define ILI9488_Y_RES 320
 
 extern int ili9488_driver_init();
 extern void ili9488_video_flush(int xs, int ys, int xe, int ye, void *vmem16, uint32_t len);
+extern void ili9488_flush(lv_display_t * disp_drv, const lv_area_t * area, uint8_t * px_map);
 
 #endif

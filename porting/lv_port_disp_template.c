@@ -60,7 +60,8 @@ void lv_port_disp_init(void)
      * Create a display and set a flush_cb
      * -----------------------------------*/
     disp = lv_display_create(MY_DISP_HOR_RES, MY_DISP_VER_RES);
-    lv_display_set_flush_cb(disp, disp_flush);
+    // lv_display_set_flush_cb(disp, disp_flush);
+    lv_display_set_flush_cb(disp, ili9488_flush);
 
 /* a half screen disp buffer */
 #ifndef MY_DISP_BUF_SIZE

@@ -101,7 +101,7 @@ int main(void)
     // At 400MHz CPU / 100 MHz Flash
     // Before : 348 94 45
     // After  : 386 127 157
-    // Extreme : 411 153 210
+    // Extreme : 413 153 214
     lv_demo_benchmark();
 
     /* This is a factory test app */
