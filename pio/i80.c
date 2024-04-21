@@ -38,7 +38,8 @@
 // #define I80_CLK_DIV 2.8f /* running at 50MHz when pll_sys = 280MHz */
 // #define I80_CLK_DIV 5.6f /* running at 25MHz when pll_sys = 280MHz */
 // #define I80_CLK_DIV 3.6f /* running at 50MHz when pll_sys = 360MHz */
-#define I80_BUS_CLK_KHZ 50000
+// #define I80_BUS_CLK_KHZ 50000
+#define I80_BUS_CLK_KHZ 58000
 
 #include "i80.pio.h"
 
@@ -95,13 +96,10 @@ static inline int i80_write_pio16_wr(PIO pio, uint sm, void *buf, size_t len)
 }
 #endif
 
-int __time_critical_func(i80_write_buf_rs)(void *buf, size_t len, bool rs)
+void __time_critical_func(i80_write_buf_rs)(void *buf, size_t len, bool rs)
 {
-    // i80_wait_idle(g_pio, g_sm);
     i80_set_rs(rs);
     i80_write_pio16_wr(g_pio, g_sm, buf, len);
-    // i80_wait_idle(g_pio, g_sm);
-    return 0;
 }
 
 int i80_pio_init(uint8_t db_base, uint8_t db_count, uint8_t pin_wr)

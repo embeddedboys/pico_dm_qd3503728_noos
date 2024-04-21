@@ -86,7 +86,7 @@ int main(void)
 
     /* measure weighted fps and opa speed */
     // Before : Avg.146 256 114 186
-    // After  : Avg.153 265 117 192
+    // After  : Avg.177 311 125 216
     // lv_demo_benchmark();
 
     /* This is a factory test app */
