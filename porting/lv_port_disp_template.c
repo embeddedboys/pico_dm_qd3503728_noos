@@ -108,7 +108,8 @@ void lv_port_disp_init(void)
     disp_drv.ver_res = MY_DISP_VER_RES;
 
     /*Used to copy the buffer's content to the display*/
-    disp_drv.flush_cb = disp_flush;
+    // disp_drv.flush_cb = disp_flush;
+    disp_drv.flush_cb = ili9488_flush;
 
     /*Set a display buffer*/
     disp_drv.draw_buf = &draw_buf_dsc_1;
