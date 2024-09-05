@@ -27,7 +27,6 @@
 #include "pico/time.h"
 #include "pico/stdio.h"
 #include "pico/stdlib.h"
-#include "pico/platform.h"
 #include "pico/stdio_uart.h"
 
 #include "hardware/pll.h"

@@ -26,7 +26,6 @@
 #include "pico/stdlib.h"
 #include "pico/unique_id.h"
 #include "pico/bootrom.h"
-#include "pico/platform.h"
 #include "hardware/clocks.h"
 
 #include "lvgl/lvgl.h"
