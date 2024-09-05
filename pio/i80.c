@@ -23,7 +23,6 @@
 
 #include "pico/time.h"
 #include "pico/stdlib.h"
-#include "pico/platform.h"
 
 #include "hardware/dma.h"
 #include "hardware/pio.h"
