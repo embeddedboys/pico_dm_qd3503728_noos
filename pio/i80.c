@@ -31,19 +31,7 @@
 #include "hardware/clocks.h"
 
 #include "boards/pico.h"
-
-#define USE_DMA 1
-
-// #define I80_CLK_DIV 2.8f /* running at 50MHz when pll_sys = 280MHz */
-// #define I80_CLK_DIV 5.6f /* running at 25MHz when pll_sys = 280MHz */
-// #define I80_CLK_DIV 3.6f /* running at 50MHz when pll_sys = 360MHz */
-// #define I80_BUS_CLK_KHZ 50000
-#define I80_BUS_CLK_KHZ 58000
-
 #include "i80.pio.h"
-
-// #define LCD_PIN_RS 20
-// #define LCD_PIN_CS 18
 
 static PIO g_pio = pio0;
 static uint g_sm = 0;
@@ -58,7 +46,7 @@ void __time_critical_func(i80_set_rs)(bool rs)
     gpio_put_masked(1u << LCD_PIN_RS, !!rs << LCD_PIN_RS);
 }
 
-#if USE_DMA
+#if PIO_USE_DMA
 /* DMA version */
 static uint dma_tx;
 static dma_channel_config c;
@@ -105,7 +93,7 @@ int i80_pio_init(uint8_t db_base, uint8_t db_count, uint8_t pin_wr)
 {
     printf("i80 PIO initialzing...\n");
 
-#if USE_DMA
+#if PIO_USE_DMA
     dma_tx = dma_claim_unused_channel(true);
     c = dma_channel_get_default_config(dma_tx);
 
@@ -114,7 +102,7 @@ int i80_pio_init(uint8_t db_base, uint8_t db_count, uint8_t pin_wr)
 #endif
 
     uint offset = pio_add_program(g_pio, &i80_program);
-    float clk_div = (DEFAULT_PIO_CLK_KHZ / 2.f / I80_BUS_CLK_KHZ);
+    float clk_div = (DEFAULT_PIO_CLK_KHZ / 2.f / I80_BUS_WR_CLK_KHZ);
     i80_program_init(g_pio, g_sm, offset, db_base, db_count, pin_wr, clk_div);
 
     return 0;
