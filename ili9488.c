@@ -78,7 +78,7 @@ struct ili9488_priv {
         int bl;   /* backlight */
         int db[LCD_PIN_DB_COUNT];
     } gpio;
-    
+
     /* device specific */
     const struct ili9488_operations  *tftops;
     struct ili9488_display           *display;
@@ -104,12 +104,12 @@ static void fbtft_write_gpio16_wr(struct ili9488_priv *priv, void *buf, size_t l
 
     while (len) {
         data = *(u16 *)buf;
-        
+
         /* Start writing by pulling down /WR */
         dm_gpio_set_value(priv->gpio.wr, 0);
 
         // printf("data : 0x%x\n", data);
-        
+
         /* Set data */
 #ifndef DO_NOT_OPTIMIZE_FBTFT_WRITE_GPIO
         if (data == prev_data) {
@@ -129,10 +129,10 @@ static void fbtft_write_gpio16_wr(struct ili9488_priv *priv, void *buf, size_t l
             data >>= 1;
         }
 #endif
-        
+
         /* Pullup /WR */
         dm_gpio_set_value(priv->gpio.wr, 1);
-        
+
 #ifndef DO_NOT_OPTIMIZE_FBTFT_WRITE_GPIO
         prev_data = *(u16 *)buf;
 #endif
@@ -159,25 +159,25 @@ static int ili9488_write_reg(struct ili9488_priv *priv, int len, ...)
     u16 *buf = (u16 *)priv->buf;
     va_list args;
     int i;
-    
+
     va_start(args, len);
     *buf = (u16)va_arg(args, unsigned int);
     write_buf_rs(priv, buf, sizeof(u16), 0);
     len--;
-    
+
     /* if there no privams */
     if (len == 0)
         return 0;
-    
+
     for (i = 0; i < len; i++) {
         *buf = (u16)va_arg(args, unsigned int);
         buf++;
     }
-    
+
     len *= 2;
     write_buf_rs(priv, priv->buf, len, 1);
     va_end(args);
-    
+
     return 0;
 }
 #define NUMARGS(...)  (sizeof((int[]){__VA_ARGS__}) / sizeof(int))
@@ -249,11 +249,11 @@ static int ili9488_set_addr_win(struct ili9488_priv *priv, int xs, int ys, int x
                                 int ye)
 {
     /* set column adddress */
-    write_reg(priv, 0x2A, xs >> 8, xs & 0xFF, xe >> 8, xe & 0xFF);
-    
+    write_reg(priv, 0x2A, xs >> 8, xs, xe >> 8, xe);
+
     /* set row address */
-    write_reg(priv, 0x2B, ys >> 8, ys & 0xFF, ye >> 8, ye & 0xFF);
-    
+    write_reg(priv, 0x2B, ys >> 8, ys, ye >> 8, ye);
+
     /* write start */
     write_reg(priv, 0x2C);
     return 0;
@@ -270,7 +270,7 @@ static int ili9488_clear(struct ili9488_priv *priv, u16 clear)
     priv->tftops->set_addr_win(priv, 0, 0,
                          priv->display->xres - 1,
                          priv->display->yres - 1);
-    
+
     for (x = 0; x < width; x++) {
         for (y = 0; y < height; y++) {
             write_buf_rs(priv, &clear, sizeof(u16), 1);
@@ -334,8 +334,6 @@ static int ili9488_gpio_init(struct ili9488_priv *priv)
 
 static int ili9488_hw_init(struct ili9488_priv *priv)
 {
-    int ret;
-
     printf("initializing hardware...\n");
 
 #if DISP_OVER_PIO
@@ -369,15 +367,16 @@ void ili9488_video_flush(int xs, int ys, int xe, int ye, void *vmem16, uint32_t 
     ili9488_video_sync(&g_priv, xs, ys, xe, ye, vmem16, len);
 }
 
+
 /* ########### standlone ######## */
 static inline void ili9488_write_cmd(uint16_t cmd)
 {
-    i80_write_buf_rs(&cmd, sizeof(cmd), 0);
+    write_buf_rs(&g_priv, &cmd, sizeof(cmd), 0);
 }
 #define write_cmd ili9488_write_cmd
 static inline void ili9488_write_data(uint16_t data)
 {
-    i80_write_buf_rs(&data, sizeof(data), 1);
+    write_buf_rs(&g_priv, &data, sizeof(data), 1);
 }
 #define write_data ili9488_write_data
 
@@ -387,26 +386,26 @@ void ili9488_flush(lv_display_t * disp_drv, const lv_area_t * area, uint8_t * px
 #if 1
     write_cmd(0x2A);
     write_data(area->x1 >> 8);
-    write_data(area->x1 & 0xFF);
+    write_data(area->x1);
     write_data(area->x2 >> 8);
-    write_data(area->x2 & 0xFF);
-    
+    write_data(area->x2);
+
     /* set row address */
     write_cmd(0x2B);
     write_data(area->y1 >> 8);
-    write_data(area->y1 & 0xFF);
+    write_data(area->y1);
     write_data(area->y2 >> 8);
-    write_data(area->y2 & 0xFF);
-    
+    write_data(area->y2);
+
     /* write start */
     write_cmd(0x2C);
-    i80_write_buf_rs((void *)px_map, lv_area_get_size(area) * 2, 1);
+    write_buf_rs(&g_priv, (void *)px_map, lv_area_get_size(area) * 2, 1);
 #else
     struct ili9488_priv *priv = &g_priv;
     priv->tftops->set_addr_win(priv, area->x1, area->y1, area->x2, area->y2);
     write_buf_rs(priv, (void *)px_map, lv_area_get_size(area) * 2, 1);
 #endif
-    lv_display_flush_ready(disp_drv);
+    lv_disp_flush_ready(disp_drv);
 }
 /* ########### standlone ######## */
 
@@ -414,9 +413,9 @@ void ili9488_flush(lv_display_t * disp_drv, const lv_area_t * area, uint8_t * px
 static int ili9488_probe(struct ili9488_priv *priv)
 {
     pr_debug("ili9488 probing ...\n");
-    
+
     priv->buf = (u8 *)malloc(BUF_SIZE);
-    
+
     priv->display = &default_ili9488_display;
     priv->tftops = &default_ili9488_ops;
 
@@ -432,7 +431,7 @@ static int ili9488_probe(struct ili9488_priv *priv)
         priv->gpio.db[i] = i;
 
     ili9488_hw_init(priv);
-    
+
     return 0;
 }
 
