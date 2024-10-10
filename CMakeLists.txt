@@ -75,7 +75,7 @@ if(OVERCLOCK_ENABLED)
         #  3  | 360MHz  |  90MHz    |  1.20(V)
         #  4  | 400MHz  |  100MHz   |  1.30(V)
         #  5  | 416MHz  |  104MHz   |  1.30(V)
-        set(OVERCLOCK_PROFILE 5)
+        set(OVERCLOCK_PROFILE 1)
 
         if(OVERCLOCK_PROFILE EQUAL 1)
             set(SYS_CLK_KHZ 240000)             # CPU clock speed
