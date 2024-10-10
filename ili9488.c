@@ -249,10 +249,10 @@ static int ili9488_set_addr_win(struct ili9488_priv *priv, int xs, int ys, int x
                                 int ye)
 {
     /* set column adddress */
-    write_reg(priv, 0x2A, xs >> 8, xs & 0xFF, xe >> 8, xe & 0xFF);
+    write_reg(priv, 0x2A, xs >> 8, xs, xe >> 8, xe);
 
     /* set row address */
-    write_reg(priv, 0x2B, ys >> 8, ys & 0xFF, ye >> 8, ye & 0xFF);
+    write_reg(priv, 0x2B, ys >> 8, ys, ye >> 8, ye);
 
     /* write start */
     write_reg(priv, 0x2C);
@@ -371,12 +371,12 @@ void ili9488_video_flush(int xs, int ys, int xe, int ye, void *vmem16, uint32_t 
 /* ########### standlone ######## */
 static inline void ili9488_write_cmd(uint16_t cmd)
 {
-    i80_write_buf_rs(&cmd, sizeof(cmd), 0);
+    write_buf_rs(&g_priv, &cmd, sizeof(cmd), 0);
 }
 #define write_cmd ili9488_write_cmd
 static inline void ili9488_write_data(uint16_t data)
 {
-    i80_write_buf_rs(&data, sizeof(data), 1);
+    write_buf_rs(&g_priv, &data, sizeof(data), 1);
 }
 #define write_data ili9488_write_data
 
@@ -386,20 +386,20 @@ void ili9488_flush(lv_disp_drv_t * disp_drv, const lv_area_t * area, lv_color_t 
 #if 1
     write_cmd(0x2A);
     write_data(area->x1 >> 8);
-    write_data(area->x1 & 0xFF);
+    write_data(area->x1);
     write_data(area->x2 >> 8);
-    write_data(area->x2 & 0xFF);
+    write_data(area->x2);
 
     /* set row address */
     write_cmd(0x2B);
     write_data(area->y1 >> 8);
-    write_data(area->y1 & 0xFF);
+    write_data(area->y1);
     write_data(area->y2 >> 8);
-    write_data(area->y2 & 0xFF);
+    write_data(area->y2);
 
     /* write start */
     write_cmd(0x2C);
-    i80_write_buf_rs((void *)color_p, lv_area_get_size(area) * 2, 1);
+    write_buf_rs(&g_priv, (void *)color_p, lv_area_get_size(area) * 2, 1);
 #else
     struct ili9488_priv *priv = &g_priv;
     priv->tftops->set_addr_win(priv, area->x1, area->y1, area->x2, area->y2);

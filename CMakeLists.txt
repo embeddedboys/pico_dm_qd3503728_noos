@@ -239,7 +239,7 @@ pico_add_extra_outputs(${PROJECT_NAME}) # uf2 and more files
 add_custom_target(
     print-memory-usage ALL
     COMMAND arm-none-eabi-size -G ${CMAKE_PROJECT_NAME}.elf
-    DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/build/${CMAKE_PROJECT_NAME}.elf
+    DEPENDS ${CMAKE_BINARY_DIR}/${CMAKE_PROJECT_NAME}.elf
     COMMENT "Print target size info"
     DEPENDS ${PROJECT_NAME}
 )
