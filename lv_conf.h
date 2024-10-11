@@ -1,6 +1,6 @@
 /**
  * @file lv_conf.h
- * Configuration file for v8.3.9
+ * Configuration file for v8.4.0
  */
 
 /*
@@ -175,6 +175,9 @@
 /*-------------
  * GPU
  *-----------*/
+
+/*Use TSi's (aka Think Silicon) acceleration library NemaGFX */
+#define LV_USE_NEMA_GFX 0
 
 /*Use Arm's 2D acceleration library Arm-2D */
 #define LV_USE_GPU_ARM2D 0
@@ -755,7 +758,7 @@
 #endif
 
 /*Demonstrate the usage of encoder and keyboard*/
-#define LV_USE_DEMO_KEYPAD_AND_ENCODER 0
+#define LV_USE_DEMO_KEYPAD_AND_ENCODER 1
 
 /*Benchmark your system*/
 #define LV_USE_DEMO_BENCHMARK 1

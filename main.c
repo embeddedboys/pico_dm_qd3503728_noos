@@ -80,6 +80,7 @@ int main(void)
 
     printf("Starting demo\n");
     // lv_demo_widgets();
+    // lv_demo_keypad_encoder();
     // lv_demo_stress();
     // lv_demo_music();
 
