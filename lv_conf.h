@@ -53,7 +53,7 @@
 
 #if LV_USE_STDLIB_MALLOC == LV_STDLIB_BUILTIN
     /*Size of the memory available for `lv_malloc()` in bytes (>= 2kB)*/
-    #define LV_MEM_SIZE (128 * 1024U)          /*[bytes]*/
+    #define LV_MEM_SIZE (96 * 1024U)          /*[bytes]*/
 
     /*Size of the memory expand for `lv_malloc()` in bytes*/
     #define LV_MEM_POOL_EXPAND_SIZE 0
@@ -146,8 +146,8 @@
 	#define LV_DRAW_SW_SUPPORT_RGB565		1
 	#define LV_DRAW_SW_SUPPORT_RGB565A8		0
 	#define LV_DRAW_SW_SUPPORT_RGB888		1
-	#define LV_DRAW_SW_SUPPORT_XRGB8888		0
-	#define LV_DRAW_SW_SUPPORT_ARGB8888		0
+	#define LV_DRAW_SW_SUPPORT_XRGB8888		1
+	#define LV_DRAW_SW_SUPPORT_ARGB8888		1
 	#define LV_DRAW_SW_SUPPORT_L8			0
 	#define LV_DRAW_SW_SUPPORT_AL88			0
 	#define LV_DRAW_SW_SUPPORT_A8			0
@@ -483,9 +483,9 @@
  *https://fonts.google.com/specimen/Montserrat*/
 #define LV_FONT_MONTSERRAT_8  0
 #define LV_FONT_MONTSERRAT_10 0
-#define LV_FONT_MONTSERRAT_12 0
+#define LV_FONT_MONTSERRAT_12 1
 #define LV_FONT_MONTSERRAT_14 1
-#define LV_FONT_MONTSERRAT_16 0
+#define LV_FONT_MONTSERRAT_16 1
 #define LV_FONT_MONTSERRAT_18 0
 #define LV_FONT_MONTSERRAT_20 0
 #define LV_FONT_MONTSERRAT_22 0
@@ -1090,7 +1090,7 @@
 #define LV_USE_DEMO_BENCHMARK 1
 
 /*Render test for each primitives. Requires at least 480x272 display*/
-#define LV_USE_DEMO_RENDER 0
+#define LV_USE_DEMO_RENDER 1
 
 /*Stress test for LVGL*/
 #define LV_USE_DEMO_STRESS 1
@@ -1102,7 +1102,7 @@
     #define LV_DEMO_MUSIC_LANDSCAPE 0
     #define LV_DEMO_MUSIC_ROUND     0
     #define LV_DEMO_MUSIC_LARGE     0
-    #define LV_DEMO_MUSIC_AUTO_PLAY 0
+    #define LV_DEMO_MUSIC_AUTO_PLAY 1
 #endif
 
 /*Flex layout demo*/

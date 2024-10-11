@@ -48,7 +48,7 @@
 //     return true;
 // }
 
-static uint32_t my_tick_get_cb(void)
+static uint32_t __time_critical_func(my_tick_get_cb)(void)
 {
     return time_us_32() / 1000;
 }
@@ -89,7 +89,7 @@ int main(void)
     printf("Starting demo\n");
     // lv_demo_widgets();
     // lv_demo_keypad_encoder();
-    // lv_demo_render(LV_DEMO_RENDER_SCENE_TRIANGLE, 255);
+    // lv_demo_render(LV_DEMO_RENDER_SCENE_IMAGE_NORMAL_1, 255);
     // lv_demo_stress();
     // lv_demo_music();
     // lv_demo_flex_layout();
