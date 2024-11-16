@@ -79,7 +79,7 @@ int main(void)
     lv_port_indev_init();
 
     printf("Starting demo\n");
-    // lv_demo_widgets();
+    lv_demo_widgets();
     // lv_demo_keypad_encoder();
     // lv_demo_stress();
     // lv_demo_music();
@@ -87,7 +87,7 @@ int main(void)
     /* measure weighted fps and opa speed */
     // Before : Avg.146 256 114 186
     // After  : Avg.177 311 125 216
-    lv_demo_benchmark();
+    // lv_demo_benchmark();
 
     /* This is a factory test app */
     // factory_test();

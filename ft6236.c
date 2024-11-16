@@ -32,6 +32,13 @@
 #define FT6236_ADDR      0x38
 #define FT6236_DEF_SPEED 400000
 
+typedef enum {
+    FT6236_DIR_NOP       = 0x00,
+    FT6236_DIR_INVERT_X  = 0x01,
+    FT6236_DIR_INVERT_Y  = 0x02,
+    FT6236_DIR_SWITCH_XY = 0x04,
+} ft6236_direction_t;
+
 struct ft6236_data {
     struct {
         uint8_t addr;
@@ -48,9 +55,10 @@ struct ft6236_data {
     uint16_t x_res;
     uint16_t y_res;
 
+    uint8_t rotate;
     ft6236_direction_t dir;   /* direction set */
-    bool revert_x;
-    bool revert_y;
+    bool invert_x;
+    bool invert_y;
     uint16_t (*read_x)(struct ft6236_data *priv);
     uint16_t (*read_y)(struct ft6236_data *priv);
 } g_ft6236_data;
@@ -89,7 +97,7 @@ static uint16_t __ft6236_read_x(struct ft6236_data *priv)
     uint8_t val_l = read_reg(priv, FT_REG_TOUCH1_XL);
     uint16_t val = (val_h << 8) | val_l;
 
-    if (priv->revert_x)
+    if (priv->invert_x)
         return (priv->x_res - val);
 
     return val;
@@ -104,7 +112,7 @@ static uint16_t __ft6236_read_y(struct ft6236_data *priv)
 {
     uint8_t val_h = read_reg(priv, FT_REG_TOUCH1_YH);
     uint8_t val_l = read_reg(priv, FT_REG_TOUCH1_YL);
-    if (priv->revert_y)
+    if (priv->invert_y)
         return (priv->y_res - ((val_h << 8) | val_l));
     else
         return ((val_h << 8) | val_l);
@@ -126,26 +134,26 @@ bool ft6236_is_pressed(void)
     return __ft6236_is_pressed(&g_ft6236_data);
 }
 
-static void __ft6236_set_dir(struct ft6236_data *priv, ft6236_direction_t dir)
+static void __do_ft6236_set_dir(struct ft6236_data *priv, ft6236_direction_t dir)
 {
     priv->dir = dir;
 
-    if (dir & FT6236_DIR_REVERT_X)
-        priv->revert_x = true;
+    if (dir & FT6236_DIR_INVERT_X)
+        priv->invert_x = true;
     else
-        priv->revert_x = false;
+        priv->invert_x = false;
 
-    if (dir & FT6236_DIR_REVERT_Y)
-        priv->revert_y = true;
+    if (dir & FT6236_DIR_INVERT_Y)
+        priv->invert_y = true;
     else
-        priv->revert_y = false;
+        priv->invert_y = false;
 
     if (dir & FT6236_DIR_SWITCH_XY) {
         priv->read_x = __ft6236_read_y;
         priv->read_y = __ft6236_read_x;
 
-        priv->revert_x = !priv->revert_x;
-        priv->revert_y = !priv->revert_y;
+        priv->invert_x = !priv->invert_x;
+        priv->invert_y = !priv->invert_y;
 
         priv->x_res = ILI9488_Y_RES;
         priv->y_res = ILI9488_X_RES;
@@ -155,9 +163,31 @@ static void __ft6236_set_dir(struct ft6236_data *priv, ft6236_direction_t dir)
     }
 }
 
-void ft6236_set_dir(ft6236_direction_t dir)
+void __ft6236_set_dir(struct ft6236_data *priv, uint8_t rotate)
 {
-    __ft6236_set_dir(&g_ft6236_data, dir);
+    switch(rotate) {
+    case LCD_ROTATE_0:
+        priv->dir = 0;
+        break;
+    case LCD_ROTATE_90:
+        priv->dir = FT6236_DIR_SWITCH_XY | FT6236_DIR_INVERT_Y;
+        break;
+    case LCD_ROTATE_180:
+        priv->dir = FT6236_DIR_INVERT_X | FT6236_DIR_INVERT_Y;
+        break;
+    case LCD_ROTATE_270:
+        priv->dir = FT6236_DIR_SWITCH_XY | FT6236_DIR_INVERT_X;
+        break;
+    default:
+        break;
+    }
+
+    __do_ft6236_set_dir(&g_ft6236_data, priv->dir);
+}
+
+void ft6236_set_dir(uint8_t rotate)
+{
+    __ft6236_set_dir(&g_ft6236_data, rotate);
 }
 
 static void ft6236_hw_init(struct ft6236_data *priv)
@@ -182,7 +212,7 @@ static void ft6236_hw_init(struct ft6236_data *priv)
     // write_reg(priv, FT_REG_PERIODACTIVE, 12);
 
     /* initialize touch direction */
-    __ft6236_set_dir(priv, priv->dir);
+    __ft6236_set_dir(priv, priv->rotate);
 }
 
 static int ft6236_probe(struct ft6236_data *priv)
@@ -197,10 +227,10 @@ static int ft6236_probe(struct ft6236_data *priv)
     priv->x_res = ILI9488_X_RES;
     priv->y_res = ILI9488_Y_RES;
 
-    priv->revert_x = false;
-    priv->revert_y = false;
+    priv->invert_x = false;
+    priv->invert_y = false;
 
-    priv->dir = FT6236_DIR_SWITCH_XY | FT6236_DIR_REVERT_Y;
+    priv->rotate = LCD_ROTATION;
 
     ft6236_hw_init(priv);
 

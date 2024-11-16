@@ -54,7 +54,7 @@ struct ili9488_operations {
     int (*clear)(struct ili9488_priv *priv, u16 clear);
     int (*blank)(struct ili9488_priv *priv, bool on);
     int (*sleep)(struct ili9488_priv *priv, bool on);
-    int (*set_var)(struct ili9488_priv *priv);
+    int (*set_dir)(struct ili9488_priv *priv, u8 dir);
     int (*set_addr_win)(struct ili9488_priv *priv, int xs, int ys, int xe, int ye);
     int (*set_cursor)(struct ili9488_priv *priv, int x, int y);
 };
@@ -195,13 +195,6 @@ static int ili9488_reset(struct ili9488_priv *priv)
     return 0;
 }
 
-
-static int ili9488_set_var(struct ili9488_priv *priv)
-{
-    pr_debug("%s\n", __func__);
-    return 0;
-}
-
 static int ili9488_init_display(struct ili9488_priv *priv)
 {
     pr_debug("%s, writing initial sequence...\n", __func__);
@@ -218,7 +211,7 @@ static int ili9488_init_display(struct ili9488_priv *priv)
     write_reg(priv, 0xC0, 0x17, 0x15);          // Power Control 1
     write_reg(priv, 0xC1, 0x41);                // Power Control 2
     write_reg(priv, 0xC5, 0x00, 0x12, 0x80);    // VCOM Control
-    write_reg(priv, 0x36, 0x28);                // Memory Access Control
+    // write_reg(priv, 0x36, 0x28);                // Memory Access Control
     write_reg(priv, 0x3A, 0x55);                // Pixel Interface Format RGB565 8080 16-bit
     write_reg(priv, 0xB0, 0x00);                // Interface Mode Control
 
@@ -233,6 +226,28 @@ static int ili9488_init_display(struct ili9488_priv *priv)
     write_reg(priv, 0x11);                      // Exit Sleep
     mdelay(60);
     write_reg(priv, 0x29);                      // Display on
+
+    return 0;
+}
+
+static int ili9488_set_dir(struct ili9488_priv *priv, u8 dir)
+{
+    switch (dir) {
+    case LCD_ROTATE_0:
+        write_reg(priv, MADCTL, MX | BGR);
+        break;
+    case LCD_ROTATE_90:
+        write_reg(priv, MADCTL, MV | BGR);
+        break;
+    case LCD_ROTATE_180:
+        write_reg(priv, MADCTL, MY | BGR);
+        break;
+    case LCD_ROTATE_270:
+        write_reg(priv, MADCTL, MX | MY | MV | BGR);
+        break;
+    default:
+        break;
+    }
 
     return 0;
 }
@@ -290,7 +305,7 @@ static const struct ili9488_operations default_ili9488_ops = {
     .clear           = ili9488_clear,
     .blank           = ili9488_blank,
     .sleep           = ili9488_sleep,
-    .set_var         = ili9488_set_var,
+    .set_dir         = ili9488_set_dir,
     .set_addr_win    = ili9488_set_addr_win,
 };
 
@@ -334,6 +349,7 @@ static int ili9488_hw_init(struct ili9488_priv *priv)
     ili9488_gpio_init(priv);
 
     priv->tftops->init_display(priv);
+    priv->tftops->set_dir(priv, priv->display->rotate);
     /* clear screen to black */
     // priv->tftops->clear(priv, 0x0);
 
@@ -344,7 +360,7 @@ static struct ili9488_display default_ili9488_display = {
     .xres   = ILI9488_X_RES,
     .yres   = ILI9488_Y_RES,
     .bpp    = 16,
-    .rotate = 0,
+    .rotate = LCD_ROTATION,
 };
 
 static void ili9488_video_sync(struct ili9488_priv *priv, int xs, int ys, int xe, int ye, void *vmem16, size_t len)
