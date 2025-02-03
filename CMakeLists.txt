@@ -98,7 +98,7 @@ if(OVERCLOCK_ENABLED)
     elseif(${PICO_BOARD} STREQUAL "pico2" OR ${PICO_PLATFORM} STREQUAL "rp2350")
         # Overclocking profiles
         #      SYS_CLK  | FLASH_CLK | Voltage
-        #  1  | 366MHz  |  183MHz   |  1.20(V)
+        #  1  | 366MHz  |  122MHz   |  1.20(V)
         set(OVERCLOCK_PROFILE 1)
 
         if(OVERCLOCK_PROFILE EQUAL 1)
@@ -226,11 +226,7 @@ if(${PICO_BOARD} STREQUAL "pico" OR ${PICO_PLATFORM} STREQUAL "rp2040")
         set(PICO_FLASH_SPI_CLKDIV 2)
     endif()
 elseif(${PICO_BOARD} STREQUAL  "pico2" OR ${PICO_PLATFORM} STREQUAL  "rp2350")
-    if(${SYS_CLK_KHZ} GREATER 366000)
-        set(PICO_FLASH_SPI_CLKDIV 4)
-    else()
-        set(PICO_FLASH_SPI_CLKDIV 2)
-    endif()
+	set(PICO_FLASH_SPI_CLKDIV 3)
 endif()
 
 math(EXPR FLASH_CLK_KHZ "${SYS_CLK_KHZ} / ${PICO_FLASH_SPI_CLKDIV}")
@@ -261,3 +257,24 @@ add_custom_target(
     COMMENT "Print target size info"
     DEPENDS ${PROJECT_NAME}
 )
+
+# add a firmware flash target
+if(${PICO_BOARD} STREQUAL "pico" OR ${PICO_PLATFORM} STREQUAL "rp2040")
+	add_custom_target(
+	    flash
+	    COMMAND openocd -f interface/cmsis-dap.cfg -c "adapter speed 10000"
+			    -f target/rp2040.cfg -s tcl -c "program ${CMAKE_PROJECT_NAME}.elf verify reset exit"
+	    DEPENDS ${CMAKE_BINARY_DIR}/${CMAKE_PROJECT_NAME}.elf
+	    COMMENT "Flashing firmware using CMSIS-DAP Debugger..."
+	    DEPENDS ${PROJECT_NAME}
+	)
+elseif(${PICO_BOARD} STREQUAL  "pico2" OR ${PICO_PLATFORM} STREQUAL  "rp2350")
+	add_custom_target(
+	    flash
+	    COMMAND openocd -f interface/cmsis-dap.cfg -c "adapter speed 10000"
+		            -f target/rp2350.cfg -s tcl -c "program ${CMAKE_PROJECT_NAME}.elf verify reset exit"
+	    DEPENDS ${CMAKE_BINARY_DIR}/${CMAKE_PROJECT_NAME}.elf
+	    COMMENT "Flashing firmware using CMSIS-DAP Debugger..."
+	    DEPENDS ${PROJECT_NAME}
+	)
+endif()
