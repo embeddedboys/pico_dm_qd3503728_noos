@@ -134,7 +134,11 @@ set(LCD_HOR_RES 480)
 set(LCD_VER_RES 320)
 set(DISP_OVER_PIO 1) # 1: PIO, 0: GPIO
 set(PIO_USE_DMA   1)   # 1: use DMA, 0: not use DMA
-set(I80_BUS_WR_CLK_KHZ 58000)
+if(OVERCLOCK_ENABLED)
+    set(I80_BUS_WR_CLK_KHZ 58000)
+else()
+    set(I80_BUS_WR_CLK_KHZ 50000)
+endif()
 
 # Rotation configuration
 set(LCD_ROTATION 1)  # 0: normal, 1: 90 degree, 2: 180 degree, 3: 270 degree
