@@ -99,10 +99,14 @@ if(OVERCLOCK_ENABLED)
         # Overclocking profiles
         #      SYS_CLK  | FLASH_CLK | Voltage
         #  1  | 366MHz  |  122MHz   |  1.20(V)
+        #  1  | 384MHz  |  128MHz   |  1.20(V)
         set(OVERCLOCK_PROFILE 1)
 
         if(OVERCLOCK_PROFILE EQUAL 1)
             set(SYS_CLK_KHZ 366000)             # CPU clock speed
+            set(PERI_CLK_KHZ ${SYS_CLK_KHZ})    # Peripheral clock speed
+        elseif(OVERCLOCK_PROFILE EQUAL 2)
+            set(SYS_CLK_KHZ 384000)             # CPU clock speed
             set(PERI_CLK_KHZ ${SYS_CLK_KHZ})    # Peripheral clock speed
         else()
             message(FATAL_ERROR "Invalid overclocking profile")
