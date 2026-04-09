@@ -27,6 +27,7 @@
 #include "pico/time.h"
 #include "pico/stdio.h"
 #include "pico/stdlib.h"
+#include "pico/multicore.h"
 #include "pico/stdio_uart.h"
 
 #include "hardware/pll.h"
@@ -42,70 +43,84 @@
 
 #include "backlight.h"
 
-// bool lv_tick_timer_callback(struct repeating_timer *t)
-// {
-//     lv_timer_handler();
-//     return true;
-// }
+/* 
+ * Whether to use core1 to run lvgl tasks.
+ *
+ * NOTE: Avoid race conditions between two
+ * cores accessing XIP as much as possible.
+ */
+#define LVGL_USE_CORE1 0
 
 // extern int factory_test(void);
 
+#if LVGL_USE_CORE1
+static void core1_entry(void)
+{
+	for (;;) {
+		lv_timer_handler_run_in_period(1);
+	}
+}
+#endif
+
 int main(void)
 {
-    /* NOTE: DO NOT MODIFY THIS BLOCK */
+	/* NOTE: DO NOT MODIFY THIS BLOCK */
 #define CPU_SPEED_MHZ (DEFAULT_SYS_CLK_KHZ / 1000)
-    if(CPU_SPEED_MHZ > 266 && CPU_SPEED_MHZ <= 360)
-        vreg_set_voltage(VREG_VOLTAGE_1_20);
-    else if (CPU_SPEED_MHZ > 360 && CPU_SPEED_MHZ <= 396)
-        vreg_set_voltage(VREG_VOLTAGE_1_25);
-    else if (CPU_SPEED_MHZ > 396)
-        vreg_set_voltage(VREG_VOLTAGE_MAX);
-    else
-        vreg_set_voltage(VREG_VOLTAGE_DEFAULT);
+	if (CPU_SPEED_MHZ > 266 && CPU_SPEED_MHZ <= 360)
+		vreg_set_voltage(VREG_VOLTAGE_1_20);
+	else if (CPU_SPEED_MHZ > 360 && CPU_SPEED_MHZ <= 396)
+		vreg_set_voltage(VREG_VOLTAGE_1_25);
+	else if (CPU_SPEED_MHZ > 396)
+		vreg_set_voltage(VREG_VOLTAGE_MAX);
+	else
+		vreg_set_voltage(VREG_VOLTAGE_DEFAULT);
 
-    set_sys_clock_khz(CPU_SPEED_MHZ * 1000, true);
-    clock_configure(clk_peri,
-                    0,
-                    CLOCKS_CLK_PERI_CTRL_AUXSRC_VALUE_CLK_SYS,
-                    CPU_SPEED_MHZ * MHZ,
-                    CPU_SPEED_MHZ * MHZ);
-    stdio_uart_init_full(uart0, 115200, 16, 17);
+	set_sys_clock_khz(CPU_SPEED_MHZ * 1000, true);
+	clock_configure(clk_peri, 0, CLOCKS_CLK_PERI_CTRL_AUXSRC_VALUE_CLK_SYS,
+			CPU_SPEED_MHZ * MHZ, CPU_SPEED_MHZ * MHZ);
+	stdio_uart_init_full(uart0, 115200, 16, 17);
 
+	printf("\n\n\nPICO DM QD3503728 LVGL Porting\n");
 
-    printf("\n\n\nPICO DM QD3503728 LVGL Porting\n");
+	lv_init();
+	lv_port_disp_init();
+	lv_port_indev_init();
 
-    lv_init();
-    lv_port_disp_init();
-    lv_port_indev_init();
+	printf("Starting demo\n");
+	lv_demo_widgets();
+	// lv_demo_keypad_encoder();
+	// lv_demo_stress();
+	// lv_demo_music();
 
-    printf("Starting demo\n");
-    lv_demo_widgets();
-    // lv_demo_keypad_encoder();
-    // lv_demo_stress();
-    // lv_demo_music();
+	/* measure weighted fps and opa speed */
+	// Before : Avg.146 256 114 186
+	// After  : Avg.177 311 125 216
+	// lv_demo_benchmark();
 
-    /* measure weighted fps and opa speed */
-    // Before : Avg.146 256 114 186
-    // After  : Avg.177 311 125 216
-    // lv_demo_benchmark();
+	/* This is a factory test app */
+	// factory_test();
 
-    /* This is a factory test app */
-    // factory_test();
+	// struct repeating_timer timer;
+	// add_repeating_timer_ms(1, lv_tick_timer_callback, NULL, &timer);
 
-    // struct repeating_timer timer;
-    // add_repeating_timer_ms(1, lv_tick_timer_callback, NULL, &timer);
+	sleep_ms(10);
+	backlight_driver_init();
+	backlight_set_level(100);
+	printf("backlight set to 100%%\n");
 
-    sleep_ms(10);
-    backlight_driver_init();
-    backlight_set_level(100);
-    printf("backlight set to 100%%\n");
+#if LVGL_USE_CORE1
+	multicore_launch_core1(core1_entry);
+#endif
 
-    printf("going to loop, %lld\n", time_us_64() / 1000);
-    for (;;) {
-        // tight_loop_contents();
-        // sleep_ms(200);
-        lv_timer_handler_run_in_period(1);
-    }
+	printf("going to loop, %lld\n", time_us_64() / 1000);
+	for (;;) {
+#if LVGL_USE_CORE1
+		tight_loop_contents();
+		sleep_ms(200);
+#else
+		lv_timer_handler_run_in_period(1);
+#endif
+	}
 
-    return 0;
+	return 0;
 }
