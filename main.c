@@ -28,6 +28,7 @@
 #include "pico/stdio.h"
 #include "pico/stdlib.h"
 #include "pico/multicore.h"
+#include "pico/stdio_usb.h"
 #include "pico/stdio_uart.h"
 
 #include "hardware/pll.h"
@@ -79,6 +80,7 @@ int main(void)
 	clock_configure(clk_peri, 0, CLOCKS_CLK_PERI_CTRL_AUXSRC_VALUE_CLK_SYS,
 			CPU_SPEED_MHZ * MHZ, CPU_SPEED_MHZ * MHZ);
 	stdio_uart_init_full(uart0, 115200, 16, 17);
+	stdio_usb_init();
 
 	printf("\n\n\nPICO DM QD3503728 LVGL Porting\n");
 

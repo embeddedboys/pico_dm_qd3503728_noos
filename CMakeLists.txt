@@ -46,7 +46,7 @@ endif()
 
 # If you want debug output from USB (pass -DPICO_STDIO_USB=1) this ensures you don't lose any debug output while USB is set up
 if (NOT DEFINED PICO_STDIO_USB_CONNECT_WAIT_TIMEOUT_MS)
-    set(PICO_STDIO_USB_CONNECT_WAIT_TIMEOUT_MS 3000)
+    set(PICO_STDIO_USB_CONNECT_WAIT_TIMEOUT_MS 1500)
 endif()
 
 # initialize the Raspberry Pi Pico SDK
@@ -253,7 +253,7 @@ message(WARNING "
 target_compile_definitions(bs2_default PRIVATE PICO_FLASH_SPI_CLKDIV=${PICO_FLASH_SPI_CLKDIV})
 target_compile_definitions(${PROJECT_NAME} PRIVATE FLASH_CLK_KHZ=${FLASH_CLK_KHZ})
 
-pico_enable_stdio_usb(${PROJECT_NAME} 0)    # 0: disable, 1: enable
+pico_enable_stdio_usb(${PROJECT_NAME} 1)    # 0: disable, 1: enable
 pico_enable_stdio_uart(${PROJECT_NAME} 1)   # 0: disable, 1: enable
 
 pico_add_extra_outputs(${PROJECT_NAME}) # uf2 and more files
