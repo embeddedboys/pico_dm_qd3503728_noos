@@ -31,7 +31,7 @@ include(pico_sdk_import.cmake)
 include(pico_extras_import_optional.cmake)
 
 # set the project name
-project(pico_dm_qd3503728 C CXX ASM)
+project(pico_dm_qd3503728_lvgl C CXX ASM)
 
 set(CMAKE_C_STANDARD 11)
 set(CMAKE_CXX_STANDARD 17)
