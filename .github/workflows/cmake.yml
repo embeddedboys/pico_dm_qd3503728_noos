@@ -1,0 +1,100 @@
+name: CMake
+on:
+        push:
+                branches:
+                        - "**"
+                paths-ignore:
+                        - "**.md"
+                        - "**.MD"
+                        - "README*"
+                        - "LICENSE"
+                        - "docs/**"
+                        - "assets/**"
+                        - "**.png"
+                        - "**.jpg"
+                        - "**.svg"
+                        - ".gitignore"
+                        - ".clang-format"
+        pull_request:
+                branches:
+                        - "**"
+                paths-ignore:
+                        - "**.md"
+                        - "**.MD"
+                        - "README*"
+                        - "LICENSE"
+                        - "docs/**"
+                        - "assets/**"
+                        - "**.png"
+                        - "**.jpg"
+                        - "**.svg"
+                        - ".gitignore"
+                        - ".clang-format"
+        workflow_dispatch:
+
+env:
+        BUILD_TYPE: Release
+
+jobs:
+        build:
+                runs-on: ubuntu-latest
+                strategy:
+                        fail-fast: false
+                        matrix:
+                                board: ["pico", "pico2"]
+
+                steps:
+                        - name: Clean workspace
+                          run: |
+                                  echo "Cleaning up previous run"
+                                  rm -rf "${{ github.workspace }}"
+                                  mkdir -p "${{ github.workspace }}"
+
+                        - name: Checkout repo
+                          uses: actions/checkout@v4
+                          with:
+                                  path: template
+
+                        - name: Checkout pico-sdk/develop
+                          uses: actions/checkout@v4
+                          with:
+                                  repository: raspberrypi/pico-sdk
+                                  ref: develop
+                                  path: pico-sdk
+
+                        - name: Checkout pico-sdk submodules
+                          working-directory: ${{github.workspace}}/pico-sdk
+                          run: git submodule update --init
+
+                        - name: Checkout This project submodules
+                          working-directory: ${{github.workspace}}/template
+                          run: git submodule update --init --recursive
+
+                        - name:
+                                  Create Build Environment
+                                  # Some projects don't allow in-source building, so create a separate build directory
+                                  # We'll use this as our working directory for all subsequent commands
+                          working-directory: ${{github.workspace}}/template
+                          run: cmake -E make_directory ${{github.workspace}}/template/build.${{ matrix.board }}
+
+                        - name: Install Toolchain
+                          run: |
+                                  sudo apt-get update
+                                  sudo apt-get install -y gcc-arm-none-eabi
+
+                        - name: Configure CMake
+                          # Use a bash shell so we can use the same syntax for environment variable
+                          # access regardless of the host operating system
+                          shell: bash
+                          working-directory: ${{github.workspace}}/template/build.${{ matrix.board }}
+                          run: PICO_SDK_PATH=../../pico-sdk cmake .. -DCMAKE_BUILD_TYPE=$BUILD_TYPE -DPICO_BOARD=${{ matrix.board }} #-DWIFI_SSID=TestSSID -DWIFI_PASSWORD=TestPassword
+
+                        - name: Get core count
+                          id: core_count
+                          run: cat /proc/cpuinfo | grep processor | wc -l
+
+                        - name: Build
+                          working-directory: ${{github.workspace}}/template/build.${{ matrix.board }}
+                          shell: bash
+                          # Execute the build.  You can specify a specific target with "--target <NAME>"
+                          run: cmake --build . --config $BUILD_TYPE --parallel $(nproc)
