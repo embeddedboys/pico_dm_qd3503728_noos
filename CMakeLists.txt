@@ -187,8 +187,6 @@ file(GLOB_RECURSE COMMON_SOURCES
     main.c
     ili9488.c
     ft6236.c
-    porting/lv_port_disp_template.c
-    porting/lv_port_indev_template.c
     i2c_tools.c
     backlight.c
 )

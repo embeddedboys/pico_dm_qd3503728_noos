@@ -1,5 +1,5 @@
-// Copyright (c) 2024 embeddedboys developers
-
+// Copyright (c) 2026 embeddedboys developers
+//
 // Permission is hereby granted, free of charge, to any person obtaining
 // a copy of this software and associated documentation files (the
 // "Software"), to deal in the Software without restriction, including
@@ -7,10 +7,10 @@
 // distribute, sublicense, and/or sell copies of the Software, and to
 // permit persons to whom the Software is furnished to do so, subject to
 // the following conditions:
-
+//
 // The above copyright notice and this permission notice shall be
 // included in all copies or substantial portions of the Software.
-
+//
 // THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
 // EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
 // MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
@@ -36,15 +36,15 @@
 #include "hardware/clocks.h"
 #include "hardware/timer.h"
 
+#include "ili9488.h"
+#include "ft6236.h"
+#include "backlight.h"
+
 #include "lvgl/lvgl.h"
 #include "lvgl/demos/lv_demos.h"
 #include "lvgl/examples/lv_examples.h"
-#include "porting/lv_port_disp_template.h"
-#include "porting/lv_port_indev_template.h"
 
-#include "backlight.h"
-
-/* 
+/*
  * Whether to use core1 to run lvgl tasks.
  *
  * NOTE: Avoid race conditions between two
@@ -52,18 +52,44 @@
  */
 #define LVGL_USE_CORE1 0
 
-// extern int factory_test(void);
-
-#if LVGL_USE_CORE1
-static void core1_entry(void)
-{
-	for (;;) {
-		lv_timer_handler_run_in_period(1);
-	}
-}
+#ifndef MY_DISP_BUF_SIZE
+#warning '"MY_DISP_BUF_SIZE" is not defined, defaulting to (HOR_RES * VER_RES / 2)'
+#define MY_DISP_BUF_SIZE (MY_DISP_HOR_RES * MY_DISP_VER_RES / 2)
 #endif
 
-int main(void)
+static void __attribute__((section(".time_critical.lvgl")))
+my_flush_cb(lv_disp_drv_t *disp_drv, const lv_area_t *area, lv_color_t *color_p)
+{
+	ili9488_video_flush(area->x1, area->y1, area->x2, area->y2,
+			    (void *)color_p,
+			    lv_area_get_size(area) * sizeof(lv_color_t));
+
+	lv_disp_flush_ready(disp_drv);
+}
+
+/*Will be called by the library to read the touchpad*/
+static void __attribute__((section(".time_critical.lvgl")))
+my_touchpad_read(lv_indev_drv_t *indev_drv, lv_indev_data_t *data)
+{
+	static lv_coord_t last_x = 0;
+	static lv_coord_t last_y = 0;
+
+	/*Save the pressed coordinates and the state*/
+	if (ft6236_is_pressed()) {
+		last_x = ft6236_read_x();
+		last_y = ft6236_read_y();
+		// printf("touchpad is pressed, x: %d, y: %d\n", last_x, last_y);
+		data->state = LV_INDEV_STATE_PR;
+	} else {
+		data->state = LV_INDEV_STATE_REL;
+	}
+
+	/*Set the last pressed coordinates*/
+	data->point.x = last_x;
+	data->point.y = last_y;
+}
+
+static void my_hardware_init(void)
 {
 	/* NOTE: DO NOT MODIFY THIS BLOCK */
 #define CPU_SPEED_MHZ (DEFAULT_SYS_CLK_KHZ / 1000)
@@ -82,11 +108,62 @@ int main(void)
 	stdio_uart_init_full(uart0, 115200, 16, 17);
 	stdio_usb_init();
 
-	printf("\n\n\nPICO DM QD3503728 LVGL Porting\n");
+	ili9488_driver_init();
+	ft6236_driver_init();
 
+	gpio_init(PICO_DEFAULT_LED_PIN);
+	gpio_set_dir(PICO_DEFAULT_LED_PIN, GPIO_OUT);
+}
+
+#if LVGL_USE_CORE1
+static void core1_entry(void)
+{
+	for (;;) {
+		lv_timer_handler_run_in_period(1);
+	}
+}
+#endif
+
+int main(void)
+{
+	printf("\n\n\nPICO DM QD3503728 LVGL(release/v8.4.0) Porting\n");
+
+	my_hardware_init();
+
+	/*Initialize LVGL*/
 	lv_init();
-	lv_port_disp_init();
-	lv_port_indev_init();
+
+	static lv_disp_draw_buf_t draw_buf_dsc_1;
+	static lv_color_t buf_1[MY_DISP_BUF_SIZE];
+
+	/*Initialize the display buffer*/
+	lv_disp_draw_buf_init(&draw_buf_dsc_1, buf_1, NULL, MY_DISP_BUF_SIZE);
+
+	/*Descriptor of a display driver*/
+	static lv_disp_drv_t disp_drv;
+
+	/*Basic initialization*/
+	lv_disp_drv_init(&disp_drv);
+
+	/*Set the resolution of the display*/
+	disp_drv.hor_res = LCD_HOR_RES;
+	disp_drv.ver_res = LCD_VER_RES;
+
+	/*Used to copy the buffer's content to the display*/
+	disp_drv.flush_cb = my_flush_cb;
+
+	/*Set a display buffer*/
+	disp_drv.draw_buf = &draw_buf_dsc_1;
+
+	/*Finally register the driver*/
+	lv_disp_drv_register(&disp_drv);
+
+	/*Create an input device for touch handling*/
+	static lv_indev_drv_t indev_drv;
+	lv_indev_drv_init(&indev_drv);
+	indev_drv.type = LV_INDEV_TYPE_POINTER;
+	indev_drv.read_cb = my_touchpad_read;
+	lv_indev_drv_register(&indev_drv);
 
 	printf("Starting demo\n");
 	lv_demo_widgets();
@@ -96,14 +173,12 @@ int main(void)
 
 	/* measure weighted fps and opa speed */
 	// Before : Avg.146 256 114 186
-	// After  : Avg.177 311 125 216
+	// After  : Avg.181 282 150 222
 	// lv_demo_benchmark();
 
 	/* This is a factory test app */
+	// extern int factory_test(void);
 	// factory_test();
-
-	// struct repeating_timer timer;
-	// add_repeating_timer_ms(1, lv_tick_timer_callback, NULL, &timer);
 
 	sleep_ms(10);
 	backlight_driver_init();
